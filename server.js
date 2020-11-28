@@ -23,7 +23,7 @@ mongoose.connect(process.env.URI, { useNewUrlParser: true, useUnifiedTopology: t
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function () {
+db.once('open', function() {
   const shortenSchema = new mongoose.Schema({
     original_url: String,
     short_url: String
@@ -36,9 +36,9 @@ db.once('open', function () {
     let flag;
     let randomCode;
     do {
-    randomCode = Math.round(Math.random() * 99999).toString(10).padStart(5, "0");
+      randomCode = Math.round(Math.random() * (99999 - 10000) + 10000).toString(10).padStart(5, "0");
       short = _shr + randomCode;
-      Links.find({ short_url: short }).exec(function (err, data) {
+      Links.find({ short_url: short }).exec(function(err, data) {
         if (err) { return console.log(err) };
         flag = data.length;
       });
@@ -47,22 +47,22 @@ db.once('open', function () {
       original_url: _org,
       short_url: short
     });
-    link.save(function (err, data) {
+    link.save(function(err, data) {
       if (err) { return console.log(err) }
     });
-    return ({original_url:_org,short_url:Number(randomCode)});
+    return ({ original_url: _org, short_url: Number(randomCode) });
   };
 
   // server functions
-  app.get('/', function (req, res) {
+  app.get('/', function(req, res) {
     res.sendFile(process.cwd() + '/views/index.html');
   });
 
-  app.post('/api/shorturl/new', function (req, res) {
+  app.post('/api/shorturl/new', function(req, res) {
     if ((/^(http|https):\/\/.+/).test(req.body.link)) {
       const original = req.body.link;
       const short = req.headers.host + '/api/shorturl/';
-      Links.find({ original_url: original }).exec(function (err, data) {
+      Links.find({ original_url: original }).exec(function(err, data) {
         if (err) { return console.log(err) };
         if (data.length && data[0].get('original_url') === original) {
           res.json({ original_url: data[0].get('original_url'), short_url: data[0].get('short_url') });
@@ -76,8 +76,8 @@ db.once('open', function () {
     }
   });
 
-  app.get('/api/shorturl/:link', function (req, res) {
-    Links.find({ short_url: req.headers.host + req.path }).exec(function (err, data) {
+  app.get('/api/shorturl/:link', function(req, res) {
+    Links.find({ short_url: req.headers.host + req.path }).exec(function(err, data) {
       if (err) { return console.log(err) };
       if (data.length) {
         res.redirect(data[0].get('original_url'));
@@ -87,15 +87,15 @@ db.once('open', function () {
     });
   });
 
-  app.get('/regs',function(req,res){
-    Links.find({}).select('original_url short_url').sort('original_url').exec(function(err,data){
-      if(err){return console.log(err)};
+  app.get('/regs', function(req, res) {
+    Links.find({}).select('original_url short_url').sort('original_url').exec(function(err, data) {
+      if (err) { return console.log(err) };
       res.json(data);
     });
   })
 
   //Listening server...
-  app.listen(port, function () {
+  app.listen(port, function() {
     console.log(`Listening on port ${port}`);
   });
 
