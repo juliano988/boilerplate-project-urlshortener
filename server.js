@@ -17,52 +17,78 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
-  res.sendFile(process.cwd() + '/views/index.html');
-});
-
 // Initializing db
 const mongoose = require('mongoose');
-mongoose.connect(process.env.URI, { useNewUrlParser: true , useUnifiedTopology: true });
+mongoose.connect(process.env.URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
-    const shortenSchema = new mongoose.Schema({
-        original_url: String,
-        short_url: String
+  const shortenSchema = new mongoose.Schema({
+    original_url: String,
+    short_url: String
+  });
+  const Links = mongoose.model('Links', shortenSchema);
+
+  // db functions
+  function saveLinks(_org, _shr) {
+    let short;
+    let flag;
+    do {
+      const randomCode = Math.round(Math.random() * 99999).toString(10).padStart(5, "0");
+      short = _shr + randomCode;
+      Links.find({ short_url: short }).exec(function (err, data) {
+        if (err) { return console.log(err) };
+        flag = data.length;
+      });
+    } while (flag === 0);
+    const link = new Links({
+      original_url: _org,
+      short_url: short
     });
-    const Links = mongoose.model('Links', shortenSchema);
+    link.save(function (err, data) {
+      if (err) { return console.log(err) }
+    });
+    return ({ original_url: _org, short_url: short });
+  };
 
-    // db functions
-    function saveLinks(org,shr) {
-        const link = new Links({
-            original_url: org,
-            short_url: shr
-        });
-        link.save(function(err,data){
-            if(err){return console.log(err)}
-            console.log(data);
-        });
-    };
+  // server functions
+  app.get('/', function (req, res) {
+    res.sendFile(process.cwd() + '/views/index.html');
+  });
 
-    // server functions
-    app.post('/api/shorturl/new',function(req,res){
-      if((/^(http|https):\/\/.+/).test(req.body.link)){
-        const randomCode = Math.round(Math.random()*99999).toString(10).padStart(5,"0");
-        const original = req.body.link;
-        const short = req.headers.host+'/'+randomCode;
-        saveLinks(original,short);
-        res.json({ original_url : original, short_url : short});
-      }
-      else{
+  app.post('/api/shorturl/new', function (req, res) {
+    if ((/^(http|https):\/\/.+/).test(req.body.link)) {
+      const original = req.body.link;
+      const short = req.headers.host + '/api/shorturl/';
+      Links.find({ original_url: original }).exec(function (err, data) {
+        if (err) { return console.log(err) };
+        if (data.length && data[0].get('original_url') === original) {
+          res.json({ original_url: data[0].get('original_url'), short_url: data[0].get('short_url') });
+        } else {
+          res.json(saveLinks(original, short));
+        }
+      });
+    }
+    else {
+      res.json({ error: 'invalid url' });
+    }
+  });
+
+  app.get('/api/shorturl/:link', function (req, res) {
+    Links.find({ short_url: req.headers.host + req.path }).exec(function (err, data) {
+      if (err) { return console.log(err) };
+      if (data.length) {
+        res.redirect(data[0].get('original_url'));
+      } else {
         res.json({ error: 'invalid url' });
       }
     });
+  });
 
-    //Listening server...
-    app.listen(port, function() {
-      console.log(`Listening on port ${port}`);
-    });
+  //Listening server...
+  app.listen(port, function () {
+    console.log(`Listening on port ${port}`);
+  });
 
 });

@@ -3,10 +3,19 @@ body{
 }
 
 form{
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px auto;
 }
 
-#text-code-div{
-  display: none;
-  justify-content: center;
+#link{
+  text-align: center;
+  margin-bottom: 13px;
+  width: 90%;
+}
+
+#links-list{
+  border-style: solid;
+  height: 400px;
 }
