@@ -86,6 +86,13 @@ db.once('open', function () {
     });
   });
 
+  app.get('/regs',function(req,res){
+    Links.find({}).select('original_url short_url').sort('original_url').exec(function(err,data){
+      if(err){return console.log(err)};
+      res.json(data);
+    });
+  })
+
   //Listening server...
   app.listen(port, function () {
     console.log(`Listening on port ${port}`);
