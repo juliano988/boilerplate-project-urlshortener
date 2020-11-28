@@ -34,8 +34,9 @@ db.once('open', function () {
   function saveLinks(_org, _shr) {
     let short;
     let flag;
+    let randomCode;
     do {
-      const randomCode = Math.round(Math.random() * 99999).toString(10).padStart(5, "0");
+    randomCode = Math.round(Math.random() * 99999).toString(10).padStart(5, "0");
       short = _shr + randomCode;
       Links.find({ short_url: short }).exec(function (err, data) {
         if (err) { return console.log(err) };
@@ -49,7 +50,7 @@ db.once('open', function () {
     link.save(function (err, data) {
       if (err) { return console.log(err) }
     });
-    return ({ original_url: _org, short_url: short });
+    return ({original_url:_org,short_url:Number(randomCode)});
   };
 
   // server functions

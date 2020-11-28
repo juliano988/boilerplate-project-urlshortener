@@ -41,7 +41,7 @@
     crossorigin="anonymous"></script>
   <script>
     const request = new XMLHttpRequest();
-    request.open("GET", "http://192.168.0.13:3000/regs");
+    request.open("GET", "/regs");
     request.responseType = 'json';
     request.send();
     request.onload = function () {
