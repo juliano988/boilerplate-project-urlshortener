@@ -1,4 +1,5 @@
 require('dotenv').config();
+const validUrl = require('valid-url');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser')
@@ -59,7 +60,7 @@ db.once('open', function() {
   });
 
   app.post('/api/shorturl/new', function(req, res) {
-    if ((/^(http|https):\/\/.+/).test(req.body.link)) {
+    if (validUrl.isWebUri(req.body.link)) {
       const original = req.body.link;
       const short = req.headers.host + '/api/shorturl/';
       Links.find({ original_url: original }).exec(function(err, data) {
